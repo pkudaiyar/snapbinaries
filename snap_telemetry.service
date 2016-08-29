@@ -1,0 +1,23 @@
+[unit]
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=on-failure
+RestartSec=20
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill cadvisor
+ExecStartPre=-/usr/bin/docker rm cadvisor
+ExecStartPre=-/usr/bin/docker pull google/cadvisor:latest
+ExecStart=/usr/bin/docker run --volume=/:/rootfs:ro --volume=/var/run:/var/run:rw \
+ 	--volume=/sys:/sys:ro  --volume=/var/lib/docker/:/var/lib/docker:ro --publish=8080:8080 \
+ 	--name=cadvisor google/cadvisor:latest \
+        -storage_driver=influxdb -storage_driver_db=ca_iriln088 -storage_driver_host=10.2.0.88:8086
+ExecStop=/usr/bin/docker stop cadvisor
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+MachineMetadata="node-id=IRILN088"
+X-Conflicts=cadvisor*.service
